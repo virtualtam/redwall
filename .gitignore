@@ -3,3 +3,10 @@
 
 data/
 praw.ini
+
+build/
+dist/
+*.egg-info/
+
+.coverage
+.tox/

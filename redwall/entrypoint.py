@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
-"""Development entrypoint"""
+"""Redwall - Console entrypoint"""
 import logging
 import os
 
 import praw
 
-from redwall.gathering import get_subreddit_top_submissions
+from .gathering import get_subreddit_top_submissions
 
 SUBREDDITS = [
     'AerialPorn',
@@ -36,7 +35,3 @@ def main():
     for subreddit in SUBREDDITS:
         get_subreddit_top_submissions(reddit, subreddit, TIME_FILTER, LIMIT,
                                       DATA_DIR)
-
-
-if __name__ == '__main__':
-    main()
