@@ -5,6 +5,7 @@ import os
 from urllib.parse import urlparse
 
 import requests
+from PIL import Image
 
 
 def get_subreddit_top_submissions(reddit, subreddit, time_filter, limit,
@@ -38,7 +39,9 @@ def save_submission_content(storage_dir, submission):
     os.makedirs(submission_dir, exist_ok=True)
 
     parsed_url = urlparse(submission.url)
-    filename = os.path.basename(parsed_url.path)
+    filename = os.path.join(submission_dir, os.path.basename(parsed_url.path))
+
+    # prepare metadata
     metadata = {
         'id': submission.id,
         'created_utc': submission.created_utc,
@@ -55,18 +58,28 @@ def save_submission_content(storage_dir, submission):
     except AttributeError:
         metadata['author'] = '[deleted]'
 
+    # download the image linked to the submission
+    if os.path.exists(filename):
+        logging.warning("File exists, skipping download: %s", filename)
+    else:
+        download_submission_image(submission.url, filename)
+
+    # enrich metadata with the image's properties
+    try:
+        image = Image.open(filename)
+        metadata['image_height'] = image.height
+        metadata['image_width'] = image.width
+    except (FileNotFoundError, OSError) as err:
+        logging.error("Error reading %s: %s", filename, err)
+
+    # save metadata for future usage
     with open(os.path.join(submission_dir, 'meta.json'), 'w') as f_meta:
         f_meta.write(json.dumps(metadata, sort_keys=True, indent=2))
 
-    if os.path.exists(os.path.join(submission_dir, filename)):
-        logging.warning("File exists, skipping download: %s", filename)
-    else:
-        download_submission_image(submission, submission_dir, filename)
 
-
-def download_submission_image(submission, submission_dir, filename):
+def download_submission_image(submission_url, filename):
     """Download the image linked to a submission"""
-    logging.info("Downloading %s", submission.url)
+    logging.info("Downloading %s", submission_url)
 
     headers = {
         'Accept-Encoding': 'gzip, deflate, sdch',
@@ -79,10 +92,10 @@ def download_submission_image(submission, submission_dir, filename):
     }
 
     try:
-        response = requests.get(submission.url, headers=headers)
+        response = requests.get(submission_url, headers=headers)
         response.raise_for_status()
 
-        with open(os.path.join(submission_dir, filename), 'wb') as f_img:
+        with open(os.path.join(filename), 'wb') as f_img:
             f_img.write(response.content)
 
     except requests.exceptions.TooManyRedirects as err:
