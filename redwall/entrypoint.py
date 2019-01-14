@@ -1,37 +1,32 @@
 """Redwall - Console entrypoint"""
 import logging
 import os
+from argparse import ArgumentParser
+from configparser import ConfigParser
 
-import praw
-
-from .gathering import get_subreddit_top_submissions
-
-SUBREDDITS = [
-    'AerialPorn',
-    'CityPorn',
-    'EarthPorn',
-    'InfrastructurePorn',
-    'NaturePics',
-    'SkyPorn',
-    'SpacePorn',
-    'wallpaper',
-    'WaterPorn',
-]
-
-DATA_DIR = os.path.join(os.path.abspath(os.curdir), 'data')
-
-LIMIT = 20
-TIME_FILTER = 'month'
-
-PRAW_PROFILE = 'vt'
+from .gathering import gather_subreddits
 
 
 def main():
     """Main entrypoint"""
     logging.getLogger().setLevel(logging.INFO)
 
-    reddit = praw.Reddit(PRAW_PROFILE)
+    parser = ArgumentParser()
+    parser.add_argument(
+        '-c',
+        '--config',
+        default='',
+        help="Configuration file"
+    )
 
-    for subreddit in SUBREDDITS:
-        get_subreddit_top_submissions(reddit, subreddit, TIME_FILTER, LIMIT,
-                                      DATA_DIR)
+    args = parser.parse_args()
+
+    config = ConfigParser()
+    config.read([
+        args.config,
+        os.path.join(os.getcwd(), 'redwall.ini'),
+        os.path.join(os.path.expanduser('~'), '.config', 'redwall.ini'),
+        os.path.join(os.path.expanduser('~'), '.redwall'),
+    ])
+
+    gather_subreddits(config)

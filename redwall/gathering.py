@@ -6,6 +6,56 @@ from urllib.parse import urlparse
 
 import requests
 from PIL import Image
+from praw import Reddit
+
+DEFAULT_DATA_DIR = os.path.join(os.getcwd(), 'data')
+DEFAULT_SUBMISSION_LIMIT = 20
+DEFAULT_SUBREDDITS = [
+    'EarthPorn',
+    'NaturePics',
+]
+DEFAULT_TIME_FILTER = 'month'
+
+
+def gather_subreddits(config):
+    """Gather submission from the configured subreddits"""
+    reddit = Reddit(
+        client_id=config['reddit']['client_id'],
+        client_secret=config['reddit']['client_secret'],
+        user_agent=config['reddit']['user_agent'],
+    )
+
+    data_dir = DEFAULT_DATA_DIR
+    submission_limit = DEFAULT_SUBMISSION_LIMIT
+    subreddits = DEFAULT_SUBREDDITS
+    time_filter = DEFAULT_TIME_FILTER
+
+    try:
+        submission_limit = config['redwall'].get(
+            'submission_limit',
+            DEFAULT_SUBMISSION_LIMIT
+        )
+        submission_limit = int(submission_limit)
+
+        time_filter = config['redwall'].get(
+            'time_filter',
+            DEFAULT_TIME_FILTER
+        )
+
+        subreddits = config['redwall']['subreddits']
+        subreddits = subreddits.strip().replace(',', ' ').split()
+
+    except KeyError as err:
+        logging.warning("Missing configuration: %s", err)
+
+    for subreddit in subreddits:
+        get_subreddit_top_submissions(
+            reddit,
+            subreddit,
+            time_filter,
+            submission_limit,
+            data_dir,
+        )
 
 
 def get_subreddit_top_submissions(reddit, subreddit, time_filter, limit,
