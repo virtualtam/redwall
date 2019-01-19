@@ -60,3 +60,5 @@ class Config():
             self.submission_limit = DEFAULT_SUBMISSION_LIMIT
             self.subreddits = DEFAULT_SUBREDDITS
             self.time_filter = DEFAULT_TIME_FILTER
+
+        self.db_filename = os.path.join(self.data_dir, 'redwall.db')

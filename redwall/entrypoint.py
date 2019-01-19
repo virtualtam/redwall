@@ -3,8 +3,12 @@ import logging
 import os
 from argparse import ArgumentParser
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from .config import Config
 from .gathering import Gatherer
+from .models import Base
 
 
 def main():
@@ -27,6 +31,10 @@ def main():
         os.path.join(os.path.expanduser('~'), '.config', 'redwall.ini'),
         os.path.join(os.path.expanduser('~'), '.redwall'),
     ])
+
+    engine = create_engine('sqlite:///%s' % config.db_filename)
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
 
     gatherer = Gatherer(config)
     gatherer.download_top_submissions()

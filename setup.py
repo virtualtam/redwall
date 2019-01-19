@@ -42,6 +42,7 @@ setup(
         'Pillow',
         'praw',
         'requests',
+        'SQLAlchemy',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
