@@ -4,7 +4,7 @@ import os
 from argparse import ArgumentParser
 from configparser import ConfigParser
 
-from .gathering import gather_subreddits
+from .gathering import Gatherer
 
 
 def main():
@@ -29,4 +29,5 @@ def main():
         os.path.join(os.path.expanduser('~'), '.redwall'),
     ])
 
-    gather_subreddits(config)
+    gatherer = Gatherer(config)
+    gatherer.download_top_submissions()

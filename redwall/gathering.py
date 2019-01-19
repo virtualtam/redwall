@@ -17,114 +17,115 @@ DEFAULT_SUBREDDITS = [
 DEFAULT_TIME_FILTER = 'month'
 
 
-def gather_subreddits(config):
-    """Gather submission from the configured subreddits"""
-    reddit = Reddit(
-        client_id=config['reddit']['client_id'],
-        client_secret=config['reddit']['client_secret'],
-        user_agent=config['reddit']['user_agent'],
-    )
+class Gatherer():
+    """Gather information from Reddit and download submissions"""
 
-    data_dir = DEFAULT_DATA_DIR
-    submission_limit = DEFAULT_SUBMISSION_LIMIT
-    subreddits = DEFAULT_SUBREDDITS
-    time_filter = DEFAULT_TIME_FILTER
+    def __init__(self, config):
+        """Load configuration and prepare resources"""
+        self.config = config
 
-    try:
-        submission_limit = config['redwall'].get(
-            'submission_limit',
-            DEFAULT_SUBMISSION_LIMIT
-        )
-        submission_limit = int(submission_limit)
-
-        time_filter = config['redwall'].get(
-            'time_filter',
-            DEFAULT_TIME_FILTER
+        self.reddit = Reddit(
+            client_id=config['reddit']['client_id'],
+            client_secret=config['reddit']['client_secret'],
+            user_agent=config['reddit']['user_agent'],
         )
 
-        subreddits = config['redwall']['subreddits']
-        subreddits = subreddits.strip().replace(',', ' ').split()
+        self.data_dir = DEFAULT_DATA_DIR
+        self.submission_limit = DEFAULT_SUBMISSION_LIMIT
+        self.subreddits = DEFAULT_SUBREDDITS
+        self.time_filter = DEFAULT_TIME_FILTER
 
-    except KeyError as err:
-        logging.warning("Missing configuration: %s", err)
+        try:
+            self.submission_limit = config['redwall'].get(
+                'submission_limit',
+                DEFAULT_SUBMISSION_LIMIT
+            )
+            self.submission_limit = int(self.submission_limit)
 
-    for subreddit in subreddits:
-        get_subreddit_top_submissions(
-            reddit,
+            self.time_filter = config['redwall'].get(
+                'time_filter',
+                DEFAULT_TIME_FILTER
+            )
+
+            self.subreddits = config['redwall']['subreddits']
+            self.subreddits = self.subreddits.strip().replace(',', ' ').split()
+
+        except KeyError as err:
+            logging.warning("Missing configuration: %s", err)
+
+    def download_top_submissions(self):
+        """Get top submissions from the configured subreddits"""
+        for subreddit in self.subreddits:
+            storage_dir = os.path.join(self.data_dir, subreddit)
+            os.makedirs(storage_dir, exist_ok=True)
+
+            for submission in self.get_subreddit_top_submissions(subreddit):
+                if 'v.reddit' in submission.domain:
+                    continue
+                self.download_submission(storage_dir, submission)
+
+    def get_subreddit_top_submissions(self, subreddit):
+        """Get top submissions from a subreddit"""
+        logging.info(
+            "Gathering the top %d submissions from /r/%s for this %s",
+            self.submission_limit,
             subreddit,
-            time_filter,
-            submission_limit,
-            data_dir,
+            self.time_filter,
         )
 
+        return self.reddit.subreddit(subreddit).top(
+            limit=self.submission_limit,
+            time_filter=self.time_filter,
+        )
 
-def get_subreddit_top_submissions(reddit, subreddit, time_filter, limit,
-                                  data_dir):
-    """Get top submissions from a subreddit"""
-    logging.info(
-        "Gathering the top %d submissions from /r/%s for this %s",
-        limit,
-        subreddit,
-        time_filter,
-    )
+    @staticmethod
+    def download_submission(storage_dir, submission):
+        """Save a submission's content along with its metadata"""
+        logging.info("Saving %s", submission.id)
 
-    storage_dir = os.path.join(data_dir, subreddit)
-    os.makedirs(storage_dir, exist_ok=True)
+        submission_dir = os.path.join(storage_dir, submission.id)
+        os.makedirs(submission_dir, exist_ok=True)
 
-    submissions = reddit.subreddit(subreddit).top(
-        limit=limit,
-        time_filter=time_filter,
-    )
-    for submission in submissions:
-        if 'v.reddit' in submission.domain:
-            continue
-        save_submission_content(storage_dir, submission)
+        parsed_url = urlparse(submission.url)
+        filename = os.path.join(
+            submission_dir,
+            os.path.basename(parsed_url.path)
+        )
 
+        # prepare metadata
+        metadata = {
+            'id': submission.id,
+            'created_utc': submission.created_utc,
+            'domain': submission.domain,
+            'image_filename': filename,
+            'over_18': submission.over_18,
+            'permalink': submission.permalink,
+            'score': submission.score,
+            'title': submission.title,
+            'url': submission.url,
+        }
+        try:
+            metadata['author'] = submission.author.name
+        except AttributeError:
+            metadata['author'] = '[deleted]'
 
-def save_submission_content(storage_dir, submission):
-    """Save a submission's content along with its metadata"""
-    logging.info("Saving %s", submission.id)
+        # download the image linked to the submission
+        if os.path.exists(filename):
+            logging.warning("File exists, skipping download: %s", filename)
+        else:
+            download_submission_image(submission.url, filename)
 
-    submission_dir = os.path.join(storage_dir, submission.id)
-    os.makedirs(submission_dir, exist_ok=True)
+        # enrich metadata with the image's properties
+        try:
+            image = Image.open(filename)
+            metadata['image_height'] = image.height
+            metadata['image_width'] = image.width
+        except (FileNotFoundError, OSError) as err:
+            logging.error("Error reading %s: %s", filename, err)
 
-    parsed_url = urlparse(submission.url)
-    filename = os.path.join(submission_dir, os.path.basename(parsed_url.path))
-
-    # prepare metadata
-    metadata = {
-        'id': submission.id,
-        'created_utc': submission.created_utc,
-        'domain': submission.domain,
-        'image_filename': filename,
-        'over_18': submission.over_18,
-        'permalink': submission.permalink,
-        'score': submission.score,
-        'title': submission.title,
-        'url': submission.url,
-    }
-    try:
-        metadata['author'] = submission.author.name
-    except AttributeError:
-        metadata['author'] = '[deleted]'
-
-    # download the image linked to the submission
-    if os.path.exists(filename):
-        logging.warning("File exists, skipping download: %s", filename)
-    else:
-        download_submission_image(submission.url, filename)
-
-    # enrich metadata with the image's properties
-    try:
-        image = Image.open(filename)
-        metadata['image_height'] = image.height
-        metadata['image_width'] = image.width
-    except (FileNotFoundError, OSError) as err:
-        logging.error("Error reading %s: %s", filename, err)
-
-    # save metadata for future usage
-    with open(os.path.join(submission_dir, 'meta.json'), 'w') as f_meta:
-        f_meta.write(json.dumps(metadata, sort_keys=True, indent=2))
+        # save metadata for future usage
+        with open(os.path.join(submission_dir, 'meta.json'), 'w') as f_meta:
+            f_meta.write(json.dumps(metadata, sort_keys=True, indent=2))
 
 
 def download_submission_image(submission_url, filename):
