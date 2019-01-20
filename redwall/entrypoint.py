@@ -34,7 +34,7 @@ def main():
 
     engine = create_engine('sqlite:///%s' % config.db_filename)
     Base.metadata.create_all(engine)
-    session = sessionmaker(bind=engine)()
+    db_session = sessionmaker(bind=engine)()
 
-    gatherer = Gatherer(config)
+    gatherer = Gatherer(config, db_session)
     gatherer.download_top_submissions()

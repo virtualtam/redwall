@@ -2,17 +2,21 @@
 import json
 import logging
 import os
+from datetime import datetime
 from urllib.parse import urlparse
 
 import requests
 from PIL import Image
 from praw import Reddit
+from sqlalchemy.orm.exc import NoResultFound
+
+from .models import Submission, Subreddit
 
 
 class Gatherer():
     """Gather information from Reddit and download submissions"""
 
-    def __init__(self, config):
+    def __init__(self, config, db_session):
         """Load configuration and prepare resources"""
         self.reddit = Reddit(
             client_id=config.reddit_client_id,
@@ -25,16 +29,27 @@ class Gatherer():
         self.subreddits = config.subreddits
         self.time_filter = config.time_filter
 
+        self.db_session = db_session
+
     def download_top_submissions(self):
         """Get top submissions from the configured subreddits"""
         for subreddit in self.subreddits:
+            try:
+                db_subreddit = self.db_session.query(
+                    Subreddit
+                ).filter_by(name=subreddit).one()
+            except NoResultFound:
+                db_subreddit = Subreddit(name=subreddit)
+                self.db_session.add(db_subreddit)
+                self.db_session.commit()
+
             storage_dir = os.path.join(self.data_dir, subreddit)
             os.makedirs(storage_dir, exist_ok=True)
 
             for submission in self.get_subreddit_top_submissions(subreddit):
                 if 'v.reddit' in submission.domain:
                     continue
-                self.download_submission(storage_dir, submission)
+                self.download_submission(storage_dir, db_subreddit, submission)
 
     def get_subreddit_top_submissions(self, subreddit):
         """Get top submissions from a subreddit"""
@@ -50,9 +65,9 @@ class Gatherer():
             time_filter=self.time_filter,
         )
 
-    @staticmethod
-    def download_submission(storage_dir, submission):
+    def download_submission(self, storage_dir, db_subreddit, submission):
         """Save a submission's content along with its metadata"""
+        # pylint: disable=too-many-locals
         logging.info("Saving %s", submission.id)
 
         submission_dir = os.path.join(storage_dir, submission.id)
@@ -77,25 +92,63 @@ class Gatherer():
             'url': submission.url,
         }
         try:
-            metadata['author'] = submission.author.name
+            author = submission.author.name
         except AttributeError:
-            metadata['author'] = '[deleted]'
+            author = '[deleted]'
+        metadata['author'] = author
 
         # download the image linked to the submission
         if os.path.exists(filename):
             logging.warning("File exists, skipping download: %s", filename)
+            image_downloaded = True
         else:
-            download_submission_image(submission.url, filename)
+            try:
+                download_submission_image(submission.url, filename)
+                image_downloaded = True
+            except requests.exceptions.TooManyRedirects:
+                image_downloaded = False
 
         # enrich metadata with the image's properties
         try:
             image = Image.open(filename)
-            metadata['image_height'] = image.height
-            metadata['image_width'] = image.width
+            image_height_px = image.height
+            image_width_px = image.width
         except (FileNotFoundError, OSError) as err:
             logging.error("Error reading %s: %s", filename, err)
+            image_height_px = None
+            image_width_px = None
+
+        metadata['image_height'] = image_height_px
+        metadata['image_width'] = image_width_px
 
         # save metadata for future usage
+        try:
+            db_submission = self.db_session.query(
+                Submission
+            ).filter_by(post_id=submission.id).one()
+        except NoResultFound:
+            created_utc = datetime.fromtimestamp(
+                int(float(submission.created_utc))
+            )
+            db_submission = Submission(
+                subreddit_id=db_subreddit.id,
+                post_id=submission.id,
+                author=author,
+                created_utc=created_utc,
+                domain=submission.domain,
+                over_18=submission.over_18,
+                permalink=submission.permalink,
+                score=submission.score,
+                title=submission.title,
+                url=submission.url,
+                image_downloaded=image_downloaded,
+                image_filename=filename,
+                image_height_px=image_height_px,
+                image_width_px=image_width_px,
+            )
+            self.db_session.add(db_submission)
+            self.db_session.commit()
+
         with open(os.path.join(submission_dir, 'meta.json'), 'w') as f_meta:
             f_meta.write(json.dumps(metadata, sort_keys=True, indent=2))
 
@@ -128,3 +181,4 @@ def download_submission_image(submission_url, filename):
 
     except requests.exceptions.TooManyRedirects as err:
         logging.error(err)
+        raise
