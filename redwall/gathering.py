@@ -8,50 +8,22 @@ import requests
 from PIL import Image
 from praw import Reddit
 
-DEFAULT_DATA_DIR = os.path.join(os.getcwd(), 'data')
-DEFAULT_SUBMISSION_LIMIT = 20
-DEFAULT_SUBREDDITS = [
-    'EarthPorn',
-    'NaturePics',
-]
-DEFAULT_TIME_FILTER = 'month'
-
 
 class Gatherer():
     """Gather information from Reddit and download submissions"""
 
     def __init__(self, config):
         """Load configuration and prepare resources"""
-        self.config = config
-
         self.reddit = Reddit(
-            client_id=config['reddit']['client_id'],
-            client_secret=config['reddit']['client_secret'],
-            user_agent=config['reddit']['user_agent'],
+            client_id=config.reddit_client_id,
+            client_secret=config.reddit_client_secret,
+            user_agent=config.reddit_user_agent,
         )
 
-        self.data_dir = DEFAULT_DATA_DIR
-        self.submission_limit = DEFAULT_SUBMISSION_LIMIT
-        self.subreddits = DEFAULT_SUBREDDITS
-        self.time_filter = DEFAULT_TIME_FILTER
-
-        try:
-            self.submission_limit = config['redwall'].get(
-                'submission_limit',
-                DEFAULT_SUBMISSION_LIMIT
-            )
-            self.submission_limit = int(self.submission_limit)
-
-            self.time_filter = config['redwall'].get(
-                'time_filter',
-                DEFAULT_TIME_FILTER
-            )
-
-            self.subreddits = config['redwall']['subreddits']
-            self.subreddits = self.subreddits.strip().replace(',', ' ').split()
-
-        except KeyError as err:
-            logging.warning("Missing configuration: %s", err)
+        self.data_dir = config.data_dir
+        self.submission_limit = config.submission_limit
+        self.subreddits = config.subreddits
+        self.time_filter = config.time_filter
 
     def download_top_submissions(self):
         """Get top submissions from the configured subreddits"""

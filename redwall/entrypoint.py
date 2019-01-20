@@ -2,8 +2,8 @@
 import logging
 import os
 from argparse import ArgumentParser
-from configparser import ConfigParser
 
+from .config import Config
 from .gathering import Gatherer
 
 
@@ -21,8 +21,7 @@ def main():
 
     args = parser.parse_args()
 
-    config = ConfigParser()
-    config.read([
+    config = Config([
         args.config,
         os.path.join(os.getcwd(), 'redwall.ini'),
         os.path.join(os.path.expanduser('~'), '.config', 'redwall.ini'),
