@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 import requests
 from PIL import Image
 from praw import Reddit
+from requests.exceptions import HTTPError, TooManyRedirects
 from sqlalchemy.orm.exc import NoResultFound
 
 from .models import Submission, Subreddit
@@ -83,7 +84,7 @@ class Gatherer():
             try:
                 download_submission_image(submission.url, filename)
                 image_downloaded = True
-            except requests.exceptions.TooManyRedirects:
+            except (HTTPError, TooManyRedirects):
                 image_downloaded = False
 
         # enrich metadata with the image's properties
@@ -158,6 +159,6 @@ def download_submission_image(submission_url, filename):
         with open(os.path.join(filename), 'wb') as f_img:
             f_img.write(response.content)
 
-    except requests.exceptions.TooManyRedirects as err:
+    except (HTTPError, TooManyRedirects) as err:
         logging.error(err)
         raise
