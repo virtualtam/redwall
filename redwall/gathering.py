@@ -1,5 +1,4 @@
 """Gather images from Reddit"""
-import json
 import logging
 import os
 from datetime import datetime
@@ -79,24 +78,6 @@ class Gatherer():
             os.path.basename(parsed_url.path)
         )
 
-        # prepare metadata
-        metadata = {
-            'id': submission.id,
-            'created_utc': submission.created_utc,
-            'domain': submission.domain,
-            'image_filename': filename,
-            'over_18': submission.over_18,
-            'permalink': submission.permalink,
-            'score': submission.score,
-            'title': submission.title,
-            'url': submission.url,
-        }
-        try:
-            author = submission.author.name
-        except AttributeError:
-            author = '[deleted]'
-        metadata['author'] = author
-
         # download the image linked to the submission
         if os.path.exists(filename):
             logging.warning("File exists, skipping download: %s", filename)
@@ -118,8 +99,15 @@ class Gatherer():
             image_height_px = None
             image_width_px = None
 
-        metadata['image_height'] = image_height_px
-        metadata['image_width'] = image_width_px
+        # prepare metadata
+        try:
+            author = submission.author.name
+        except AttributeError:
+            author = '[deleted]'
+
+        created_utc = datetime.fromtimestamp(
+            int(float(submission.created_utc))
+        )
 
         # save metadata for future usage
         try:
@@ -127,9 +115,6 @@ class Gatherer():
                 Submission
             ).filter_by(post_id=submission.id).one()
         except NoResultFound:
-            created_utc = datetime.fromtimestamp(
-                int(float(submission.created_utc))
-            )
             db_submission = Submission(
                 subreddit_id=db_subreddit.id,
                 post_id=submission.id,
@@ -148,9 +133,6 @@ class Gatherer():
             )
             self.db_session.add(db_submission)
             self.db_session.commit()
-
-        with open(os.path.join(submission_dir, 'meta.json'), 'w') as f_meta:
-            f_meta.write(json.dumps(metadata, sort_keys=True, indent=2))
 
 
 def download_submission_image(submission_url, filename):
