@@ -69,13 +69,10 @@ class Gatherer():
         # pylint: disable=too-many-locals
         logging.info("Saving %s", submission.id)
 
-        submission_dir = os.path.join(storage_dir, submission.id)
-        os.makedirs(submission_dir, exist_ok=True)
-
         parsed_url = urlparse(submission.url)
         filename = os.path.join(
-            submission_dir,
-            os.path.basename(parsed_url.path)
+            storage_dir,
+            submission.id + '-' + os.path.basename(parsed_url.path)
         )
 
         # download the image linked to the submission
