@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from .config import Config
 from .gathering import Gatherer
 from .models import Base
+from .stats import display_stats
 
 
 def main():
@@ -23,6 +24,13 @@ def main():
         help="Configuration file"
     )
 
+    subparsers = parser.add_subparsers(
+        dest='command',
+        help="Command to run",
+    )
+    subparsers.add_parser('gather')
+    subparsers.add_parser('stats')
+
     args = parser.parse_args()
 
     config = Config([
@@ -36,5 +44,10 @@ def main():
     Base.metadata.create_all(engine)
     db_session = sessionmaker(bind=engine)()
 
-    gatherer = Gatherer(config, db_session)
-    gatherer.download_top_submissions()
+    if args.command == 'gather':
+        gatherer = Gatherer(config, db_session)
+        gatherer.download_top_submissions()
+    elif args.command == 'stats':
+        display_stats(db_session)
+    else:
+        logging.warning("Unknown command: %s", args.command)

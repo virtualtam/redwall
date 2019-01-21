@@ -1,4 +1,5 @@
 """Gather images from Reddit"""
+# pylint: disable=ungrouped-imports
 import logging
 import os
 from datetime import datetime
