@@ -59,7 +59,7 @@ def main():
         gatherer = Gatherer(config, db_session)
         gatherer.download_top_submissions()
 
-    if args.command == 'history':
+    elif args.command == 'history':
         entries = db_session.query(
             History
         ).order_by(History.id.asc()).all()
