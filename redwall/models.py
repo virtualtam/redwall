@@ -54,6 +54,15 @@ class Submission(Base):
             self.title,
         )
 
+    def pprint(self):
+        """Pretty-printable string representation"""
+        return "%s | %d x %d | %s" % (
+            self.post_id,
+            int(self.image_width_px),
+            int(self.image_height_px),
+            self.title
+        )
+
 
 class History(Base):
     """History tracks wallpaper selections"""

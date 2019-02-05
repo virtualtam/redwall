@@ -57,9 +57,4 @@ class Chooser():
             ).order_by(Submission.created_utc).all()
 
             for submission in submissions:
-                print("%s | %d x %d | %s" % (
-                    submission.post_id,
-                    submission.image_width_px,
-                    submission.image_height_px,
-                    submission.title
-                ))
+                print(submission.pprint())

@@ -50,22 +50,22 @@ def main():
     db_session = sessionmaker(bind=engine)()
 
     if args.command == 'current':
-        submission = db_session.query(
+        entry = db_session.query(
             History
         ).order_by(History.id.desc()).first()
-        print(submission)
+        print("%s | %s" % (entry.date, entry.submission.pprint()))
 
     elif args.command == 'gather':
         gatherer = Gatherer(config, db_session)
         gatherer.download_top_submissions()
 
     if args.command == 'history':
-        submissions =  db_session.query(
+        entries = db_session.query(
             History
         ).order_by(History.id.asc()).all()
 
-        for submission in submissions:
-            print(submission)
+        for entry in entries:
+            print("%s | %s" % (entry.date, entry.submission.pprint()))
 
     elif args.command == 'random':
         # when choosing the same image for all monitors, it should be:
