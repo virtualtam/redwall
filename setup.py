@@ -42,6 +42,7 @@ setup(
         'Pillow',
         'praw',
         'requests',
+        'screeninfo',
         'SQLAlchemy',
     ],
     classifiers=[

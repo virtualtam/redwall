@@ -3,6 +3,7 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
@@ -51,4 +52,21 @@ class Submission(Base):
             self.subreddit.name,
             self.post_id,
             self.title,
+        )
+
+
+class History(Base):
+    """History tracks wallpaper selections"""
+
+    __tablename__ = 'history'
+
+    id = Column(Integer, primary_key=True)
+    submission_id = Column(Integer, ForeignKey('submissions.id'))
+    submission = relationship('Submission')
+    date = Column(DateTime, server_default=func.now())
+
+    def __repr__(self):
+        return "<History(id='%s', title='%s')>" % (
+            self.submission.post_id,
+            self.submission.title,
         )
