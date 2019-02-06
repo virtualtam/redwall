@@ -1,4 +1,4 @@
-"""Find images to set as wallpapers for the current screen configuration"""
+"""Find images to set as wallpapers for the current monitor configuration"""
 import random
 
 from sqlalchemy import func
@@ -10,17 +10,21 @@ from .models import History, Submission, Subreddit
 class Chooser():
     """Choose submissions suitable for wallpaper usage"""
 
-    def __init__(self, db_session, screen_height, screen_width):
+    def __init__(self, db_session, monitors):
         """Load configuration and prepare resources"""
         self.db_session = db_session
-        self.screen_height = screen_height
-        self.screen_width = screen_width
+
+        # when choosing the same image for all monitors, it should be:
+        # - wider than the widest monitor
+        # - taller than the tallest monitor
+        self.image_height = max([m.height for m in monitors])
+        self.image_width = max([m.width for m in monitors])
 
     def get_candidates(self):
-        """Get suitable submissions for the current screen setup"""
+        """Get suitable submissions for the current monitor setup"""
         return self.db_session.query(Submission).filter(
-            Submission.image_height_px >= self.screen_height,
-            Submission.image_width_px >= self.screen_width,
+            Submission.image_height_px >= self.image_height,
+            Submission.image_width_px >= self.image_width,
         ).all()
 
     def get_random_candidate(self):
@@ -52,8 +56,8 @@ class Chooser():
                 Submission
             ).filter(
                 Submission.subreddit_id == subreddit.id,
-                Submission.image_height_px >= self.screen_height,
-                Submission.image_width_px >= self.screen_width,
+                Submission.image_height_px >= self.image_height,
+                Submission.image_width_px >= self.image_width,
             ).order_by(Submission.created_utc).all()
 
             for submission in submissions:

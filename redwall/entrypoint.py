@@ -79,16 +79,8 @@ def main():
             print("%s | %s" % (entry.date, entry.submission.pprint()))
 
     elif args.command == 'random':
-        # when choosing the same image for all monitors, it should be:
-        # - wider than the widest monitor
-        # - taller than the tallest monitor
-        monitors = get_monitors()
-        height = max([m.height for m in monitors])
-        width = max([m.width for m in monitors])
-
-        chooser = Chooser(db_session, height, width)
+        chooser = Chooser(db_session, get_monitors())
         submission = chooser.get_random_candidate()
-
         print(submission.image_filename)
 
     elif args.command == 'stats':
