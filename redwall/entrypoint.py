@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 
 from screeninfo import get_monitors
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 
 from .config import Config
@@ -46,7 +47,17 @@ def main():
     ])
 
     engine = create_engine('sqlite:///%s' % config.db_filename)
-    Base.metadata.create_all(engine)
+
+    try:
+        Base.metadata.create_all(engine)
+    except OperationalError as err:
+        logging.error(
+            "Error opening database '%s': %s",
+            config.db_filename,
+            err
+        )
+        exit(1)
+
     db_session = sessionmaker(bind=engine)()
 
     if args.command == 'current':
