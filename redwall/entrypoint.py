@@ -46,6 +46,7 @@ def main():
         os.path.join(os.path.expanduser('~'), '.redwall'),
     ])
 
+    os.makedirs(config.data_dir, exist_ok=True)
     engine = create_engine('sqlite:///%s' % config.db_filename)
 
     try:
