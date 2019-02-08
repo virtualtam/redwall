@@ -69,7 +69,11 @@ class Gatherer():
     def download_submission(self, storage_dir, db_subreddit, submission):
         """Save a submission's content along with its metadata"""
         # pylint: disable=too-many-locals
-        logging.info("Saving %s", submission.id)
+        if len(submission.title) > 75:
+            logged_title = submission.title[:75] + "..."
+        else:
+            logged_title = submission.title
+        logging.info("Saving: %s", logged_title)
 
         parsed_url = urlparse(submission.url)
         filename = os.path.join(
@@ -79,7 +83,7 @@ class Gatherer():
 
         # download the image linked to the submission
         if os.path.exists(filename):
-            logging.warning("File exists, skipping download: %s", filename)
+            logging.debug("File exists, skipping download: %s", filename)
             image_downloaded = True
         else:
             try:

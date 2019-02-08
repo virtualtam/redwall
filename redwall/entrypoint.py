@@ -1,6 +1,7 @@
 """Redwall - Console entrypoint"""
 import logging
 import os
+import time
 from argparse import ArgumentParser
 
 from screeninfo import get_monitors
@@ -18,6 +19,8 @@ from .stats import display_stats
 def main():
     """Main entrypoint"""
     logging.getLogger().setLevel(logging.INFO)
+    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(message)s')
+    logging.Formatter.converter = time.gmtime
 
     parser = ArgumentParser()
     parser.add_argument(
@@ -34,6 +37,7 @@ def main():
     subparsers.add_parser('current')
     subparsers.add_parser('gather')
     subparsers.add_parser('history')
+    subparsers.add_parser('list-candidates')
     subparsers.add_parser('random')
     subparsers.add_parser('stats')
 
@@ -81,6 +85,10 @@ def main():
 
         for entry in entries:
             print("%s | %s" % (entry.date, entry.submission.pprint()))
+
+    elif args.command == 'list-candidates':
+        chooser = Chooser(db_session, get_monitors())
+        chooser.list_candidates_by_subreddit()
 
     elif args.command == 'random':
         chooser = Chooser(db_session, get_monitors())
