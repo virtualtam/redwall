@@ -11,5 +11,10 @@ def display_stats(db_session):
         .group_by(Subreddit.id)\
         .order_by(func.lower(Subreddit.name))
 
+    grand_total = 0
+
     for subreddit, submission_total in res:
+        grand_total += int(submission_total)
         print("{:>5}  {}".format(submission_total, subreddit.name))
+
+    print("\n{:>5}  TOTAL".format(grand_total))
