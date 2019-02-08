@@ -65,7 +65,10 @@ def main():
         entry = db_session.query(
             History
         ).order_by(History.id.desc()).first()
-        print("%s | %s" % (entry.date, entry.submission.pprint()))
+        if entry:
+            print("%s | %s" % (entry.date, entry.submission.pprint()))
+        else:
+            print("Nothing found!")
 
     elif args.command == 'gather':
         gatherer = Gatherer(config, db_session)
