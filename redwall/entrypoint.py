@@ -22,7 +22,12 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)-7s %(message)s')
     logging.Formatter.converter = time.gmtime
 
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        description="Redwall helps you manage a collection of curated \
+        wallpapers, courtesy of the Reddit community.",
+        epilog="~ The front wallpaper of your computer ~",
+    )
+
     parser.add_argument(
         '-c',
         '--config',
@@ -34,12 +39,28 @@ def main():
         dest='command',
         help="Command to run",
     )
-    subparsers.add_parser('current')
-    subparsers.add_parser('gather')
-    subparsers.add_parser('history')
-    subparsers.add_parser('list-candidates')
-    subparsers.add_parser('random')
-    subparsers.add_parser('stats')
+    subparsers.add_parser(
+        'current',
+        help="Display information about the currently selected entry"
+    )
+    subparsers.add_parser('gather', help="Gather submission media from Reddit")
+    subparsers.add_parser(
+        'history',
+        help="Display the history of selected entries",
+    )
+    subparsers.add_parser(
+        'list-candidates',
+        help="List submissions suitable for the current monitor setup",
+    )
+    subparsers.add_parser(
+        'random',
+        help="Select a random submission suitable for the current monitor \
+            setup and print its path",
+    )
+    subparsers.add_parser(
+        'stats',
+        help="Display statistics about gathered submissions"
+    )
 
     args = parser.parse_args()
 
