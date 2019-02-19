@@ -3,12 +3,14 @@ import logging
 import os
 import time
 from argparse import ArgumentParser
+from platform import python_version
 
 from screeninfo import get_monitors
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 
+from . import __version__
 from .config import Config
 from .election import Chooser
 from .gathering import Gatherer
@@ -60,6 +62,10 @@ def main():
     subparsers.add_parser(
         'stats',
         help="Display statistics about gathered submissions"
+    )
+    subparsers.add_parser(
+        'version',
+        help="Display the program version"
     )
 
     args = parser.parse_args()
@@ -118,6 +124,11 @@ def main():
 
     elif args.command == 'stats':
         display_stats(db_session)
+
+    elif args.command == 'version':
+        print(
+            "Redwall version %s (Python %s)" % (__version__, python_version())
+        )
 
     else:
         logging.warning("Unknown command: %s", args.command)
