@@ -14,7 +14,7 @@ from . import __version__
 from .config import Config
 from .election import Chooser
 from .gathering import Gatherer
-from .models import Base, History
+from .models import Base, History, Submission
 from .stats import display_stats
 
 
@@ -73,6 +73,17 @@ def main():
         help="Select a random submission suitable for the current monitor \
             setup and print its path",
     )
+
+    p_search = subparsers.add_parser(
+        'search',
+        help="Search for entries by title",
+    )
+    p_search.add_argument(
+        'text',
+        nargs='+',
+        help="Query string",
+    )
+
     subparsers.add_parser(
         'stats',
         help="Display statistics about gathered submissions"
@@ -141,6 +152,20 @@ def main():
         chooser = Chooser(db_session, get_monitors())
         submission = chooser.get_random_candidate()
         print(submission.image_filename)
+
+    elif args.command == 'search':
+        submissions = db_session.query(
+            Submission
+        ).filter(
+            Submission.title.ilike("%{}%".format(" ".join(args.text)))
+        ).order_by(
+            Submission.id.asc()
+        ).all()
+
+        for submission in submissions:
+            print(submission.brief())
+
+        print("\n%d result(s) found" % len(submissions))
 
     elif args.command == 'stats':
         display_stats(db_session)
