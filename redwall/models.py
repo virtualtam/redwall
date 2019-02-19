@@ -54,13 +54,42 @@ class Submission(Base):
             self.title,
         )
 
-    def pprint(self):
-        """Pretty-printable string representation"""
+    @property
+    def post_url(self):
+        """URL of the original Reddit post"""
+        return "https://reddit.com/r/%s/comments/%s/" % (
+            self.subreddit.name,
+            self.post_id
+        )
+
+    def brief(self):
+        """Brief string representation"""
         return "%s | %d x %d | %s" % (
             self.post_id,
             int(self.image_width_px),
             int(self.image_height_px),
             self.title
+        )
+
+    def pprint(self):
+        """Pretty-printable string representation"""
+        return (
+            "Title        %s\n"
+            "Author       u/%s\n"
+            "Date         %s\n"
+            "Post URL     %s\n"
+            "Image URL    %s\n"
+            "Image size   %d x %d\n"
+            "Filename     %s"
+        ) % (
+            self.title,
+            self.author,
+            self.created_utc,
+            self.post_url,
+            self.url,
+            int(self.image_width_px),
+            int(self.image_height_px),
+            self.image_filename,
         )
 
 

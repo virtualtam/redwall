@@ -18,8 +18,14 @@ from .models import Base, History
 from .stats import display_stats
 
 
+def version():
+    """Human-friendly program version"""
+    return "Redwall version %s (Python %s)" % (__version__, python_version())
+
+
 def main():
     """Main entrypoint"""
+    # pylint: disable=too-many-branches,too-many-statements
     logging.getLogger().setLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s %(levelname)-7s %(message)s')
     logging.Formatter.converter = time.gmtime
@@ -41,10 +47,18 @@ def main():
         dest='command',
         help="Command to run",
     )
-    subparsers.add_parser(
+
+    p_current = subparsers.add_parser(
         'current',
-        help="Display information about the currently selected entry"
+        help="Display information about the currently selected entry",
     )
+    p_current.add_argument(
+        '-f',
+        '--filename',
+        action='store_true',
+        help="Only print the local filename",
+    )
+
     subparsers.add_parser('gather', help="Gather submission media from Reddit")
     subparsers.add_parser(
         'history',
@@ -96,9 +110,15 @@ def main():
         entry = db_session.query(
             History
         ).order_by(History.id.desc()).first()
-        if entry:
-            print("%s | %s" % (entry.date, entry.submission.pprint()))
+
+        if entry and args.filename:
+            print(entry.submission.image_filename)
+        elif entry:
+            print(version())
+            print("Current image, selected on %s\n" % entry.date)
+            print(entry.submission.pprint())
         else:
+            print(version())
             print("Nothing found!")
 
     elif args.command == 'gather':
@@ -111,7 +131,7 @@ def main():
         ).order_by(History.id.asc()).all()
 
         for entry in entries:
-            print("%s | %s" % (entry.date, entry.submission.pprint()))
+            print("%s | %s" % (entry.date, entry.submission.brief()))
 
     elif args.command == 'list-candidates':
         chooser = Chooser(db_session, get_monitors())
@@ -126,9 +146,7 @@ def main():
         display_stats(db_session)
 
     elif args.command == 'version':
-        print(
-            "Redwall version %s (Python %s)" % (__version__, python_version())
-        )
+        print(version())
 
     else:
         logging.warning("Unknown command: %s", args.command)
