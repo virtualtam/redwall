@@ -25,7 +25,7 @@ def version():
 
 def main():
     """Main entrypoint"""
-    # pylint: disable=too-many-branches,too-many-statements
+    # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     logging.getLogger().setLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s %(levelname)-7s %(message)s')
     logging.Formatter.converter = time.gmtime
@@ -64,6 +64,16 @@ def main():
         'history',
         help="Display the history of selected entries",
     )
+
+    p_info = subparsers.add_parser(
+        'info',
+        help="Display information about a given submission",
+    )
+    p_info.add_argument(
+        'post_id',
+        help="Reddit post ID",
+    )
+
     subparsers.add_parser(
         'list-candidates',
         help="List submissions suitable for the current monitor setup",
@@ -125,7 +135,6 @@ def main():
         if entry and args.filename:
             print(entry.submission.image_filename)
         elif entry:
-            print(version())
             print("Current image, selected on %s\n" % entry.date)
             print(entry.submission.pprint())
         else:
@@ -143,6 +152,18 @@ def main():
 
         for entry in entries:
             print("%s | %s" % (entry.date, entry.submission.brief()))
+
+    elif args.command == 'info':
+        submission = db_session.query(
+            Submission
+        ).filter_by(
+            post_id=args.post_id
+        ).one()
+
+        if submission:
+            print(submission.pprint())
+        else:
+            print("Nothing found!")
 
     elif args.command == 'list-candidates':
         chooser = Chooser(db_session, get_monitors())

@@ -72,7 +72,7 @@ class Submission(Base):
                 self.title
             )
         except TypeError:
-            return "%s |    N/A     | %s" % (
+            return "%s |     N/A     | %s" % (
                 self.post_id,
                 self.title
             )
