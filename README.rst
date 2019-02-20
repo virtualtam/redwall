@@ -4,6 +4,27 @@ Redwall - The front wallpaper to your monitor(s)
 Redwall is a command-line tool that helps you build a collection of curated
 images obtained from Reddit submissions.
 
+.. image:: media/mudurnu.jpg
+   :alt: Castles made of sand
+
+
+::
+
+    ______________________________________________________________________________________________
+   / Title        Mudurnu, Turkey: 587 castle homes after the developer went bankrupt. [1903x775] \
+   | Author       u/nlx78                                                                         |
+   | Date         2019-01-18 17:55:14                                                             |
+   | Post URL     https://reddit.com/r/AbandonedPorn/comments/ahcfxq/                             |
+   | Image URL    https://i.imgur.com/Um4hcXr.jpg                                                 |
+   | Image size   2500 x 1667                                                                     |
+   \ Filename     /home/dystopia/redwall/data/AbandonedPorn/ahcfxq-Um4hcXr.jpg                    /
+    ----------------------------------------------------------------------------------------------
+           \   ^__^
+            \  (oo)\_______
+               (__)\       )\/\
+                   ||----w |
+                   ||     ||
+
 
 Configuration
 -------------
@@ -69,6 +90,8 @@ The command-line interface is still pretty much a work in progress and is bound
 to change a bit, so the recommended way is to rely on the built-in help:
 
 ::
+
+   $ redwall -h
 
    usage: redwall [-h] [-c CONFIG]
                   {current,gather,history,list-candidates,random,stats} ...
