@@ -94,22 +94,26 @@ to change a bit, so the recommended way is to rely on the built-in help:
    $ redwall -h
 
    usage: redwall [-h] [-c CONFIG]
-                  {current,gather,history,list-candidates,random,stats} ...
+                  {current,gather,history,info,list-candidates,random,search,stats,version}
+                  ...
 
    Redwall helps you manage a collection of curated wallpapers, courtesy of the
-   Reddit community
+   Reddit community.
 
    positional arguments:
-     {current,gather,history,list-candidates,random,stats}
+     {current,gather,history,info,list-candidates,random,search,stats,version}
                            Command to run
        current             Display information about the currently selected entry
        gather              Gather submission media from Reddit
        history             Display the history of selected entries
+       info                Display information about a given submission
        list-candidates     List submissions suitable for the current monitor
                            setup
        random              Select a random submission suitable for the current
                            monitor setup and print its path
+       search              Search for entries by title
        stats               Display statistics about gathered submissions
+       version             Display the program version
 
    optional arguments:
      -h, --help            show this help message and exit
