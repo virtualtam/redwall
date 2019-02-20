@@ -68,7 +68,7 @@ Take a look at the following threads to find more interesting content ;-)
 - `What are the best photo-based subreddits?
   <https://www.reddit.com/r/AskReddit/comments/4i3rby/what_are_the_best_photobased_subreddits/>`_
 - `A list of all photography related subreddits?
-  <https://www.reddit.com/r/photography/comments/15xui8/a_list_of_all_photography_related_subreddits/>`\
+  <https://www.reddit.com/r/photography/comments/15xui8/a_list_of_all_photography_related_subreddits/>`_
 
 
 Installation
