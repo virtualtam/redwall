@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 import requests
 from PIL import Image
+from PIL.Image import DecompressionBombError
 from praw import Reddit
 from requests.exceptions import HTTPError, TooManyRedirects
 from sqlalchemy.orm.exc import NoResultFound
@@ -99,6 +100,10 @@ class Gatherer():
             image_width_px = image.width
         except (FileNotFoundError, OSError) as err:
             logging.error("Error reading %s: %s", filename, err)
+            image_height_px = None
+            image_width_px = None
+        except DecompressionBombError as err:
+            logging.error("File too large %s: %s", filename, err)
             image_height_px = None
             image_width_px = None
 
