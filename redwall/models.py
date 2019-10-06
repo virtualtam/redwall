@@ -11,11 +11,11 @@ Base = declarative_base()
 class Subreddit(Base):
     """Subreddit representation"""
 
-    __tablename__ = 'subreddits'
+    __tablename__ = "subreddits"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    submissions = relationship('Submission', back_populates='subreddit')
+    submissions = relationship("Submission", back_populates="subreddit")
 
     def __repr__(self):
         return "<Subreddit(name='%s')>" % (self.name)
@@ -24,12 +24,12 @@ class Subreddit(Base):
 class Submission(Base):
     """Reddit submission representation"""
 
-    __tablename__ = 'submissions'
+    __tablename__ = "submissions"
 
     id = Column(Integer, primary_key=True)
 
-    subreddit_id = Column(Integer, ForeignKey('subreddits.id'))
-    subreddit = relationship('Subreddit', back_populates='submissions')
+    subreddit_id = Column(Integer, ForeignKey("subreddits.id"))
+    subreddit = relationship("Subreddit", back_populates="submissions")
 
     post_id = Column(String)
 
@@ -59,7 +59,7 @@ class Submission(Base):
         """URL of the original Reddit post"""
         return "https://reddit.com/r/%s/comments/%s/" % (
             self.subreddit.name,
-            self.post_id
+            self.post_id,
         )
 
     def brief(self):
@@ -69,13 +69,10 @@ class Submission(Base):
                 self.post_id,
                 int(self.image_width_px),
                 int(self.image_height_px),
-                self.title
+                self.title,
             )
         except TypeError:
-            return "%s |     N/A     | %s" % (
-                self.post_id,
-                self.title
-            )
+            return "%s |     N/A     | %s" % (self.post_id, self.title)
 
     def pprint(self):
         """Pretty-printable string representation"""
@@ -120,11 +117,11 @@ class Submission(Base):
 class History(Base):
     """History tracks wallpaper selections"""
 
-    __tablename__ = 'history'
+    __tablename__ = "history"
 
     id = Column(Integer, primary_key=True)
-    submission_id = Column(Integer, ForeignKey('submissions.id'))
-    submission = relationship('Submission')
+    submission_id = Column(Integer, ForeignKey("submissions.id"))
+    submission = relationship("Submission")
     date = Column(DateTime, server_default=func.now())
 
     def __repr__(self):

@@ -28,7 +28,7 @@ def main():
     """Main entrypoint"""
     # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     logging.getLogger().setLevel(logging.INFO)
-    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(message)s')
+    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(message)s")
     logging.Formatter.converter = time.gmtime
 
     parser = ArgumentParser(
@@ -37,101 +37,65 @@ def main():
         epilog="~ The front wallpaper of your computer ~",
     )
 
-    parser.add_argument(
-        '-c',
-        '--config',
-        default='',
-        help="Configuration file"
-    )
+    parser.add_argument("-c", "--config", default="", help="Configuration file")
 
-    subparsers = parser.add_subparsers(
-        dest='command',
-        help="Command to run",
-    )
+    subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     p_current = subparsers.add_parser(
-        'current',
-        help="Display information about the currently selected entry",
+        "current", help="Display information about the currently selected entry"
     )
     p_current.add_argument(
-        '-f',
-        '--filename',
-        action='store_true',
-        help="Only print the local filename",
+        "-f", "--filename", action="store_true", help="Only print the local filename"
     )
 
-    subparsers.add_parser('gather', help="Gather submission media from Reddit")
-    subparsers.add_parser(
-        'history',
-        help="Display the history of selected entries",
-    )
+    subparsers.add_parser("gather", help="Gather submission media from Reddit")
+    subparsers.add_parser("history", help="Display the history of selected entries")
 
     p_info = subparsers.add_parser(
-        'info',
-        help="Display information about a given submission",
+        "info", help="Display information about a given submission"
     )
-    p_info.add_argument(
-        'post_id',
-        help="Reddit post ID",
-    )
+    p_info.add_argument("post_id", help="Reddit post ID")
 
     subparsers.add_parser(
-        'list-candidates',
+        "list-candidates",
         help="List submissions suitable for the current monitor setup",
     )
     subparsers.add_parser(
-        'random',
+        "random",
         help="Select a random submission suitable for the current monitor \
             setup and print its path",
     )
 
-    p_search = subparsers.add_parser(
-        'search',
-        help="Search for entries by title",
-    )
-    p_search.add_argument(
-        'text',
-        nargs='+',
-        help="Query string",
-    )
+    p_search = subparsers.add_parser("search", help="Search for entries by title")
+    p_search.add_argument("text", nargs="+", help="Query string")
 
-    subparsers.add_parser(
-        'stats',
-        help="Display statistics about gathered submissions"
-    )
-    subparsers.add_parser(
-        'version',
-        help="Display the program version"
-    )
+    subparsers.add_parser("stats", help="Display statistics about gathered submissions")
+    subparsers.add_parser("version", help="Display the program version")
 
     args = parser.parse_args()
 
-    config = Config([
-        args.config,
-        os.path.join(os.getcwd(), 'redwall.ini'),
-        os.path.join(os.path.expanduser('~'), '.config', 'redwall.ini'),
-        os.path.join(os.path.expanduser('~'), '.redwall'),
-    ])
+    config = Config(
+        [
+            args.config,
+            os.path.join(os.getcwd(), "redwall.ini"),
+            os.path.join(os.path.expanduser("~"), ".config", "redwall.ini"),
+            os.path.join(os.path.expanduser("~"), ".redwall"),
+        ]
+    )
 
     os.makedirs(config.data_dir, exist_ok=True)
-    engine = create_engine('sqlite:///%s' % config.db_filename)
+    engine = create_engine("sqlite:///%s" % config.db_filename)
 
     try:
         Base.metadata.create_all(engine)
     except OperationalError as err:
-        logging.error(
-            "Error opening database '%s': %s",
-            config.db_filename,
-            err
-        )
+        logging.error("Error opening database '%s': %s", config.db_filename, err)
         sys.exit(1)
 
     db_session = sessionmaker(bind=engine)()
 
-    if args.command == 'current':
-        entry = db_session.query(
-            History
-        ).order_by(History.id.desc()).first()
+    if args.command == "current":
+        entry = db_session.query(History).order_by(History.id.desc()).first()
 
         if entry and args.filename:
             print(entry.submission.image_filename)
@@ -142,57 +106,50 @@ def main():
             print(version())
             print("Nothing found!")
 
-    elif args.command == 'gather':
+    elif args.command == "gather":
         gatherer = Gatherer(config, db_session)
         gatherer.download_top_submissions()
 
-    elif args.command == 'history':
-        entries = db_session.query(
-            History
-        ).order_by(History.id.asc()).all()
+    elif args.command == "history":
+        entries = db_session.query(History).order_by(History.id.asc()).all()
 
         for entry in entries:
             print("%s | %s" % (entry.date, entry.submission.brief()))
 
-    elif args.command == 'info':
-        submission = db_session.query(
-            Submission
-        ).filter_by(
-            post_id=args.post_id
-        ).one()
+    elif args.command == "info":
+        submission = db_session.query(Submission).filter_by(post_id=args.post_id).one()
 
         if submission:
             print(submission.pprint())
         else:
             print("Nothing found!")
 
-    elif args.command == 'list-candidates':
+    elif args.command == "list-candidates":
         chooser = Chooser(db_session, get_monitors())
         chooser.list_candidates_by_subreddit()
 
-    elif args.command == 'random':
+    elif args.command == "random":
         chooser = Chooser(db_session, get_monitors())
         submission = chooser.get_random_candidate()
         print(submission.image_filename)
 
-    elif args.command == 'search':
-        submissions = db_session.query(
-            Submission
-        ).filter(
-            Submission.title.ilike("%{}%".format(" ".join(args.text)))
-        ).order_by(
-            Submission.id.asc()
-        ).all()
+    elif args.command == "search":
+        submissions = (
+            db_session.query(Submission)
+            .filter(Submission.title.ilike("%{}%".format(" ".join(args.text))))
+            .order_by(Submission.id.asc())
+            .all()
+        )
 
         for submission in submissions:
             print(submission.brief())
 
         print("\n%d result(s) found" % len(submissions))
 
-    elif args.command == 'stats':
+    elif args.command == "stats":
         display_stats(db_session)
 
-    elif args.command == 'version':
+    elif args.command == "version":
         print(version())
 
     else:

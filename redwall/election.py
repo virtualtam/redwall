@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from .models import History, Submission, Subreddit
 
 
-class Chooser():
+class Chooser:
     """Choose submissions suitable for wallpaper usage"""
 
     def __init__(self, db_session, monitors):
@@ -22,10 +22,14 @@ class Chooser():
 
     def get_candidates(self):
         """Get suitable submissions for the current monitor setup"""
-        return self.db_session.query(Submission).filter(
-            Submission.image_height_px >= self.image_height,
-            Submission.image_width_px >= self.image_width,
-        ).all()
+        return (
+            self.db_session.query(Submission)
+            .filter(
+                Submission.image_height_px >= self.image_height,
+                Submission.image_width_px >= self.image_width,
+            )
+            .all()
+        )
 
     def get_random_candidate(self):
         """Choose a random submission among suitable candidates"""
@@ -33,9 +37,11 @@ class Chooser():
         submission = random.choice(submissions)
 
         try:
-            historow = self.db_session.query(
-                History
-            ).filter_by(submission_id=submission.id).one()
+            historow = (
+                self.db_session.query(History)
+                .filter_by(submission_id=submission.id)
+                .one()
+            )
         except NoResultFound:
             historow = History(submission_id=submission.id)
             self.db_session.add(historow)
@@ -45,20 +51,23 @@ class Chooser():
 
     def list_candidates_by_subreddit(self):
         """Pretty-print suitable submissions"""
-        subreddits = self.db_session.query(
-            Subreddit
-        ).order_by(func.lower(Subreddit.name)).all()
+        subreddits = (
+            self.db_session.query(Subreddit).order_by(func.lower(Subreddit.name)).all()
+        )
 
         for subreddit in subreddits:
             print("\n/r/%s" % subreddit.name)
             print("---%s" % (len(subreddit.name) * "-"))
-            submissions = self.db_session.query(
-                Submission
-            ).filter(
-                Submission.subreddit_id == subreddit.id,
-                Submission.image_height_px >= self.image_height,
-                Submission.image_width_px >= self.image_width,
-            ).order_by(Submission.created_utc).all()
+            submissions = (
+                self.db_session.query(Submission)
+                .filter(
+                    Submission.subreddit_id == subreddit.id,
+                    Submission.image_height_px >= self.image_height,
+                    Submission.image_width_px >= self.image_width,
+                )
+                .order_by(Submission.created_utc)
+                .all()
+            )
 
             for submission in submissions:
                 print(submission.pprint())

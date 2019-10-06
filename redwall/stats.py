@@ -6,10 +6,12 @@ from .models import Submission, Subreddit
 
 def display_stats(db_session):
     """Print statistics about collected submissions"""
-    res = db_session.query(Subreddit, func.count(Submission.id))\
-        .join(Submission)\
-        .group_by(Subreddit.id)\
+    res = (
+        db_session.query(Subreddit, func.count(Submission.id))
+        .join(Submission)
+        .group_by(Subreddit.id)
         .order_by(func.lower(Subreddit.name))
+    )
 
     grand_total = 0
 
