@@ -1,6 +1,7 @@
 """Redwall - Console entrypoint"""
 import logging
 import os
+import sys
 import time
 from argparse import ArgumentParser
 from platform import python_version
@@ -123,7 +124,7 @@ def main():
             config.db_filename,
             err
         )
-        exit(1)
+        sys.exit(1)
 
     db_session = sessionmaker(bind=engine)()
 
