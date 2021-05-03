@@ -34,8 +34,9 @@ setup(
     url="https://github.com/virtualtam/redwall",
     keywords="image reddit wallpaper",
     packages=find_packages(exclude=["tests.*", "tests"]),
-    entry_points={"console_scripts": ["redwall = redwall.entrypoint:main"]},
+    entry_points={"console_scripts": ["redwall = redwall.cli:redwall"]},
     install_requires=[
+        "click>=7.1,<7.2",
         "Pillow>=8.2,<8.3",
         "praw>=7.2.0,<7.3",
         "requests>=2.25,<2.26",
