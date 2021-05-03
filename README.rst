@@ -47,16 +47,15 @@ be located at ``~/.config/redwall.ini``:
    client_secret = s3rk3t   # Reddit OAuth client secret
 
    [redwall]
-   data_dir = /home/dystopia/redwall/data
+   data_dir         = /home/dystopia/redwall/data
    submission_limit = 20
    time_filter      = month
-   # dat pr0n
    subreddits =
-       AerialPorn
-       CityPorn
-       EarthPorn
-       SpacePorn
-       WaterPorn
+       Castles
+       CozyPlaces
+       gardening
+       ImaginaryLibraries
+       oldmaps
 
 This file defines authentication information, as well as which subreddits should
 be browsed when gathering submitted images.
