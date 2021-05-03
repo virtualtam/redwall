@@ -141,7 +141,6 @@ class Gatherer:
 
 def download_submission_image(submission_url, filename):
     """Download the image linked to a submission"""
-    # pylint: disable=bad-continuation
     logging.info("Downloading %s", submission_url)
 
     headers = {
