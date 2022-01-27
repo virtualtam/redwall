@@ -15,7 +15,7 @@ def get_long_description():
 
 def get_program_metadata(attribute):
     """Reads program metadata from the main package's __init__"""
-    with open(os.path.join("redwall", "__init__.py"), "r") as f_init:
+    with open(os.path.join("redwall", "__init__.py"), "r", encoding="utf-8") as f_init:
         return re.search(
             r'^__{attr}__\s*=\s*[\'"]([^\'"]*)[\'"]'.format(attr=attribute),
             f_init.read(),
