@@ -37,10 +37,10 @@ setup(
     entry_points={"console_scripts": ["redwall = redwall.cli:redwall"]},
     install_requires=[
         "click>=8.0,<8.1",
-        "Pillow>=8.3,<8.4",
-        "praw>=7.3.0,<7.4",
-        "requests>=2.26,<2.27",
-        "screeninfo==0.6.7",
+        "Pillow>=9.0,<9.1",
+        "praw>=7.5.0,<7.6",
+        "requests>=2.27,<2.28",
+        "screeninfo==0.8",
         "SQLAlchemy>=1.4,<1.5",
     ],
     classifiers=[
